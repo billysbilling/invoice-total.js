@@ -5,7 +5,7 @@ var taxRateScale = 6
 var zero = new BigNumber('0')
 var one = new BigNumber('1')
 
-module.exports = function(invoice, lines) {
+var invoiceTotal = module.exports = function(invoice, lines) {
     var amount = zero
     var tax = zero
     var linesOut = []
@@ -13,51 +13,26 @@ module.exports = function(invoice, lines) {
 
     if (lines) {
         lines.forEach(function(line) {
-            //Round the amount for the line
-            var quantity = new BigNumber('' + (line.quantity || 0))
-            var unitPrice = new BigNumber('' + (line.unitPrice || 0))
-            var lineAmount = quantity.times(unitPrice).round(moneyScale)
-
-            //Subtract discount
-            var discountAmount
-            if (line.discountMode === 'percent') {
-                var percentage = new BigNumber('' + line.discountValue)
-                discountAmount = lineAmount.times(percentage).round(moneyScale)
-            } else if (line.discountMode === 'cash') {
-                discountAmount = new BigNumber('' + line.discountValue).round(moneyScale)
-            } else {
-                discountAmount = zero
-            }
-
-            var lineAmountWithDiscount = lineAmount.minus(discountAmount)
+            var r = lalaLine(invoice, line)
 
             //Add the line's amount to the total amount
-            amount = amount.plus(lineAmountWithDiscount)
+            amount = amount.plus(r.amountAfterDiscount)
 
-            if (line.currentTaxRate) {
-                var rate = new BigNumber('' + line.currentTaxRate)
-                var lineTax
-
-                //Caculate the line's tax without rounding it
-                if (invoice.taxMode === 'incl') {
-                    lineTax = lineAmountWithDiscount.times(reverseRate(rate))
-                } else {
-                    lineTax = lineAmountWithDiscount.times(rate)
-                }
-
-                if (!taxLinesByRate[rate]) {
-                    taxLinesByRate[rate] = lineTax
-                } else {
-                    taxLinesByRate[rate] = taxLinesByRate[rate].plus(lineTax)
-                }
-
+            if (r.currentTaxRate !== null) {
                 //Add the line's tax to the total tax, still no rounding
-                tax = tax.plus(lineTax)
+                tax = tax.plus(r.tax)
+
+                //Add the line's tax to the appropriate tax line group
+                if (!taxLinesByRate[r.currentTaxRate]) {
+                    taxLinesByRate[r.currentTaxRate] = r.tax
+                } else {
+                    taxLinesByRate[r.currentTaxRate] = taxLinesByRate[r.currentTaxRate].plus(r.tax)
+                }
             }
 
             linesOut.push({
-                amount: lineAmount.toNumber(),
-                discountAmount: discountAmount.toNumber()
+                amount: r.amount.toNumber(),
+                discountAmount: r.discountAmount.toNumber()
             })
         })
     }
@@ -91,6 +66,58 @@ module.exports = function(invoice, lines) {
         grossAmount: grossAmount.toNumber(),
         lines: linesOut,
         taxLines: taxLines
+    }
+}
+
+invoiceTotal.line = function(invoice, line) {
+    var r = lalaLine(invoice, line)
+    return {
+        amount: r.amount.toNumber(),
+        discountAmount: r.discountAmount.toNumber()
+    }
+}
+
+function lalaLine(invoice, line) {
+    //Round the amount for the line
+    var quantity = new BigNumber('' + (line.quantity || 0))
+    var unitPrice = new BigNumber('' + (line.unitPrice || 0))
+    var lineAmount = quantity.times(unitPrice).round(moneyScale)
+
+    //Subtract discount
+    var discountAmount
+    if (line.discountMode === 'percent') {
+        var percentage = new BigNumber('' + line.discountValue)
+        discountAmount = lineAmount.times(percentage).round(moneyScale)
+    } else if (line.discountMode === 'cash') {
+        discountAmount = new BigNumber('' + line.discountValue).round(moneyScale)
+    } else {
+        discountAmount = zero
+    }
+
+    var amountAfterDiscount = lineAmount.minus(discountAmount)
+
+    var tax
+    var currentTaxRate
+    if (line.currentTaxRate) {
+        var currentTaxRate = new BigNumber('' + line.currentTaxRate)
+
+        //Caculate the line's tax without rounding it
+        if (invoice.taxMode === 'incl') {
+            tax = amountAfterDiscount.times(reverseRate(currentTaxRate))
+        } else {
+            tax = amountAfterDiscount.times(currentTaxRate)
+        }
+    } else {
+        tax = zero
+        currentTaxRate = null
+    }
+
+    return {
+        amount: lineAmount,
+        discountAmount: discountAmount,
+        amountAfterDiscount: amountAfterDiscount,
+        currentTaxRate: currentTaxRate,
+        tax: tax
     }
 }
 

@@ -474,4 +474,44 @@ describe('invoice-total', function() {
             })
         })
     })
+
+    describe('.line()', function() {
+        describe('without discount', function() {
+            before(function() {
+                subject = c.line({
+                    taxMode: 'incl'
+                }, {
+                    quantity: 3.57,
+                    unitPrice: 111.23
+                })
+            })
+
+            it('calculates', function() {
+                expect(subject).to.deep.equal({
+                    amount: 397.09,
+                    discountAmount: 0
+                })
+            })
+        })
+
+        describe('with discount', function() {
+            before(function() {
+                subject = c.line({
+                    taxMode: 'incl'
+                }, {
+                    quantity: 1.01,
+                    unitPrice: 198.9876,
+                    discountMode: 'percent',
+                    discountValue: 0.23
+                })
+            })
+
+            it('calculates', function() {
+                expect(subject).to.deep.equal({
+                    amount: 200.98,
+                    discountAmount: 46.23
+                })
+            })
+        })
+    })
 })
