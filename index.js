@@ -14,8 +14,8 @@ module.exports = function(quote, lines) {
     if (lines) {
         lines.forEach(function(line) {
             //Round the amount for the line
-            var quantity = new BigNumber('' + line.quantity)
-            var unitPrice = new BigNumber('' + line.unitPrice)
+            var quantity = new BigNumber('' + (line.quantity || 0))
+            var unitPrice = new BigNumber('' + (line.unitPrice || 0))
             var lineAmount = quantity.times(unitPrice).round(moneyScale)
 
             //Subtract discount

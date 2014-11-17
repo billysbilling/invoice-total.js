@@ -312,6 +312,33 @@ describe('invoice-total', function() {
             })
         })
 
+        describe('with undefined values', function() {
+            before(function() {
+                subject = c({
+                    taxMode: 'excl'
+                }, [
+                    {
+                        quantity: undefined,
+                        unitPrice: undefined,
+                        currentTaxRate: undefined
+                    }
+                ])
+            })
+
+            it('is 0', function() {
+                assert.equal(subject.netAmount, 0)
+                assert.equal(subject.tax, 0)
+                assert.equal(subject.grossAmount, 0)
+                expect(subject.lines).to.deep.equal([
+                    {
+                        amount: 0,
+                        discountAmount: 0
+                    }
+                ])
+                expect(subject.taxLines).to.deep.equal([])
+            })
+        })
+
         describe('big combination', function() {
             before(function() {
                 subject = c({
