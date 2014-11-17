@@ -228,6 +228,7 @@ describe('invoice-total', function() {
             it('has taxLines', function() {
                 expect(subject.taxLines).to.deep.equal([
                     {
+                        name: null,
                         rate: 0.075,
                         amount: 5884.97
                     }
@@ -268,6 +269,7 @@ describe('invoice-total', function() {
             it('has taxLines', function() {
                 expect(subject.taxLines).to.deep.equal([
                     {
+                        name: null,
                         rate: 0.25,
                         amount: 0.01
                     }
@@ -283,17 +285,20 @@ describe('invoice-total', function() {
                     {
                         quantity: 1,
                         unitPrice: 100,
-                        currentTaxRate: 0.25
+                        currentTaxRate: 0.25,
+                        name: 'Sales VAT'
                     },
                     {
                         quantity: 1,
                         unitPrice: 10,
-                        currentTaxRate: 0.25
+                        currentTaxRate: 0.25,
+                        name: 'Sales VAT'
                     },
                     {
                         quantity: 1,
                         unitPrice: 500,
-                        currentTaxRate: 0.1
+                        currentTaxRate: 0.1,
+                        name: 'Weird VAT'
                     }
                 ])
             })
@@ -301,10 +306,12 @@ describe('invoice-total', function() {
             it('groups taxLines per rate', function() {
                 expect(subject.taxLines).to.deep.equal([
                     {
+                        name: null,
                         rate: 0.25,
                         amount: 27.5
                     },
                     {
+                        name: null,
                         rate: 0.1,
                         amount: 50
                     }

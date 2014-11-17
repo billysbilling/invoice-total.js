@@ -18,15 +18,20 @@ var invoiceTotal = module.exports = function(invoice, lines) {
             //Add the line's amount to the total amount
             amount = amount.plus(r.amountAfterDiscount)
 
-            if (r.currentTaxRate !== null) {
+            if (line.currentTaxRate) {
                 //Add the line's tax to the total tax, still no rounding
                 tax = tax.plus(r.tax)
 
                 //Add the line's tax to the appropriate tax line group
-                if (!taxLinesByRate[r.currentTaxRate]) {
-                    taxLinesByRate[r.currentTaxRate] = r.tax
+                var taxGroup = line.taxRateName + ' ' + line.currentTaxRate
+                if (!taxLinesByRate[taxGroup]) {
+                    taxLinesByRate[taxGroup] = {
+                        name: line.taxRateName || null,
+                        rate: line.currentTaxRate,
+                        amount: r.tax
+                    }
                 } else {
-                    taxLinesByRate[r.currentTaxRate] = taxLinesByRate[r.currentTaxRate].plus(r.tax)
+                    taxLinesByRate[taxGroup].amount = taxLinesByRate[taxGroup].amount.plus(r.tax)
                 }
             }
 
@@ -53,11 +58,11 @@ var invoiceTotal = module.exports = function(invoice, lines) {
 
     //Make nice taxLines array
     var taxLines = []
+    var item
     for (var rate in taxLinesByRate) {
-        taxLines.push({
-            rate: +rate,
-            amount: taxLinesByRate[rate].round(moneyScale).toNumber()
-        })
+        item = taxLinesByRate[rate]
+        item.amount = item.amount.round(moneyScale).toNumber()
+        taxLines.push(item)
     }
 
     return {
@@ -97,26 +102,23 @@ function calculateLine(invoice, line) {
     var amountAfterDiscount = lineAmount.minus(discountAmount)
 
     var tax
-    var currentTaxRate
     if (line.currentTaxRate) {
-        var currentTaxRate = new BigNumber('' + line.currentTaxRate)
+        var rate = new BigNumber('' + line.currentTaxRate)
 
         //Caculate the line's tax without rounding it
         if (invoice.taxMode === 'incl') {
-            tax = amountAfterDiscount.times(reverseRate(currentTaxRate))
+            tax = amountAfterDiscount.times(reverseRate(rate))
         } else {
-            tax = amountAfterDiscount.times(currentTaxRate)
+            tax = amountAfterDiscount.times(rate)
         }
     } else {
         tax = zero
-        currentTaxRate = null
     }
 
     return {
         amount: lineAmount,
         discountAmount: discountAmount,
         amountAfterDiscount: amountAfterDiscount,
-        currentTaxRate: currentTaxRate,
         tax: tax
     }
 }
