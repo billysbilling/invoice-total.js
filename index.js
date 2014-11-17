@@ -5,7 +5,7 @@ var taxRateScale = 6
 var zero = new BigNumber('0')
 var one = new BigNumber('1')
 
-module.exports = function(quote, lines) {
+module.exports = function(invoice, lines) {
     var amount = zero
     var tax = zero
     var linesOut = []
@@ -39,7 +39,7 @@ module.exports = function(quote, lines) {
                 var lineTax
 
                 //Caculate the line's tax without rounding it
-                if (quote.taxMode === 'incl') {
+                if (invoice.taxMode === 'incl') {
                     lineTax = lineAmountWithDiscount.times(reverseRate(rate))
                 } else {
                     lineTax = lineAmountWithDiscount.times(rate)
@@ -68,7 +68,7 @@ module.exports = function(quote, lines) {
     //If taxMode is incl we need to subtract tax from amount, so it becomes the net amount
     var netAmount
     var grossAmount
-    if (quote.taxMode === 'incl') {
+    if (invoice.taxMode === 'incl') {
         netAmount = amount.minus(tax)
         grossAmount = amount
     } else {
