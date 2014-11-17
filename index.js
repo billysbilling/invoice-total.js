@@ -13,7 +13,7 @@ var invoiceTotal = module.exports = function(invoice, lines) {
 
     if (lines) {
         lines.forEach(function(line) {
-            var r = lalaLine(invoice, line)
+            var r = calculateLine(invoice, line)
 
             //Add the line's amount to the total amount
             amount = amount.plus(r.amountAfterDiscount)
@@ -70,14 +70,14 @@ var invoiceTotal = module.exports = function(invoice, lines) {
 }
 
 invoiceTotal.line = function(invoice, line) {
-    var r = lalaLine(invoice, line)
+    var r = calculateLine(invoice, line)
     return {
         amount: r.amount.toNumber(),
         discountAmount: r.discountAmount.toNumber()
     }
 }
 
-function lalaLine(invoice, line) {
+function calculateLine(invoice, line) {
     //Round the amount for the line
     var quantity = new BigNumber('' + (line.quantity || 0))
     var unitPrice = new BigNumber('' + (line.unitPrice || 0))
