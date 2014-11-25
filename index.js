@@ -56,12 +56,30 @@ var invoiceTotal = module.exports = function(invoice, lines) {
         grossAmount = amount.plus(tax)
     }
 
+    //Round each tax lines' amount, and calculate the total of all tax lines
+    var rate
+    var totalTaxCheck = zero
+    for (rate in taxLinesByRate) {
+        item = taxLinesByRate[rate]
+        item.amount = item.amount.round(moneyScale)
+        totalTaxCheck = totalTaxCheck.plus(item.amount)
+    }
+
+    //If totalTaxCheck != tax, we need to add that difference to the first taxLine
+    if (!totalTaxCheck.equals(tax)) {
+        for (rate in taxLinesByRate) {
+            item = taxLinesByRate[rate]
+            item.amount = item.amount.plus(tax.minus(totalTaxCheck))
+            break;
+        }
+    }
+
     //Make nice taxLines array
     var taxLines = []
     var item
-    for (var rate in taxLinesByRate) {
+    for (rate in taxLinesByRate) {
         item = taxLinesByRate[rate]
-        item.amount = item.amount.round(moneyScale).toNumber()
+        item.amount = item.amount.toNumber()
         taxLines.push(item)
     }
 
