@@ -1,6 +1,7 @@
 var assert = require('assert')
 var expect = require('chai').expect
 var c = require('../index')
+var BigNumber = require('bignumber.js')
 
 describe('invoice-total', function() {
     var subject
@@ -351,34 +352,34 @@ describe('invoice-total', function() {
                 subject = c({
                     taxMode: 'excl'
                 }, [
-                    {//amount: 12, tax: 0
-                        quantity: 3,
-                        unitPrice: 4
-                    },
-                    {//amount: 10, tax: 2.5
-                        quantity: 1,
-                        unitPrice: 10,
-                        currentTaxRate: 0.25
-                    },
-                    {//amount: 163.42, tax: 12.2565
-                        quantity: 8.99,
-                        unitPrice: 18.178,
-                        currentTaxRate: 0.075
-                    },
-                    {//amount: 3097.86, tax: 154.893
-                        quantity: 3.89,
-                        unitPrice: 799.1719,
-                        discountMode: 'cash',
-                        discountValue: 10.92,
-                        currentTaxRate: 0.05
-                    },
-                    {//amount: 10449.41, tax: 301.987949
-                        quantity: 917.0123,
-                        unitPrice: 12.9999,
-                        discountMode: 'percent',
-                        discountValue: 0.12345,
-                        currentTaxRate: 0.0289
-                    }
+                {//amount: 12, tax: 0
+                    quantity: 3,
+                    unitPrice: 4
+                },
+                {//amount: 10, tax: 2.5
+                    quantity: 1,
+                    unitPrice: 10,
+                    currentTaxRate: 0.25
+                },
+                {//amount: 163.42, tax: 12.2565
+                    quantity: 8.99,
+                    unitPrice: 18.178,
+                    currentTaxRate: 0.075
+                },
+                {//amount: 3097.86, tax: 154.893
+                    quantity: 3.89,
+                    unitPrice: 799.1719,
+                    discountMode: 'cash',
+                    discountValue: 10.92,
+                    currentTaxRate: 0.05
+                },
+                {//amount: 10449.41, tax: 301.987949
+                    quantity: 917.0123,
+                    unitPrice: 12.9999,
+                    discountMode: 'percent',
+                    discountValue: 0.12345,
+                    currentTaxRate: 0.0289
+                }
                 ])
             })
 
@@ -392,6 +393,131 @@ describe('invoice-total', function() {
 
             it('adds tax to gross', function() {
                 assert.equal(subject.grossAmount, 14204.33)
+            })
+        })
+
+        describe('with 0.01 too little on a tax line', function() {
+            before(function() {
+                subject = c({
+                    taxMode: 'excl'
+                }, [
+                    {
+                        quantity: 1,
+                        unitPrice: 100.2,
+                        currentTaxRate: 0.01
+                    },
+                    {
+                        quantity: 1,
+                        unitPrice: 100.2,
+                        currentTaxRate: 0.02
+                    }
+                ])
+            })
+
+            it('is correct', function() {
+                assert.equal(subject.netAmount, 200.4)
+                assert.equal(subject.tax, 3.01)
+                assert.equal(subject.grossAmount, 203.41)
+
+                expect(subject.taxLines).to.deep.equal([
+                    {
+                        name: null,
+                        rate: 0.01,
+                        amount: 1.01 //An extra 0.01 was added here, since the rounding of the total tax did not match the rounding of each tax line
+                    },
+                    {
+                        name: null,
+                        rate: 0.02,
+                        amount: 2
+                    }
+                ])
+
+                assertIntegrity(subject)
+            })
+        })
+
+        describe('with 0.01 too much on a tax line', function() {
+            before(function() {
+                subject = c({
+                    taxMode: 'excl'
+                }, [
+                    {
+                        quantity: 1,
+                        unitPrice: 100.5,
+                        currentTaxRate: 0.01
+                    },
+                    {
+                        quantity: 1,
+                        unitPrice: 10.05,
+                        currentTaxRate: 0.1
+                    }
+                ])
+            })
+
+            it('is correct', function() {
+                assert.equal(subject.netAmount, 110.55)
+                assert.equal(subject.tax, 2.01)
+                assert.equal(subject.grossAmount, 112.56)
+
+                expect(subject.taxLines).to.deep.equal([
+                    {
+                        name: null,
+                        rate: 0.01,
+                        amount: 1 //0.01 was subtracted here, since the rounding of the total tax did not match the rounding of each tax line
+                    },
+                    {
+                        name: null,
+                        rate: 0.1,
+                        amount: 1.01
+                    }
+                ])
+
+                assertIntegrity(subject)
+            })
+        })
+
+        describe('scenario C', function() {
+            before(function() {
+                subject = c({
+                    taxMode: 'excl'
+                }, [
+                    {
+                        quantity: 1,
+                        unitPrice: 123.45,
+                        currentTaxRate: 0.25
+                    },
+                    {
+                        quantity: 1,
+                        unitPrice: 100,
+                        currentTaxRate: 0.25
+                    },
+                    {
+                        quantity: 1,
+                        unitPrice: 123.47,
+                        currentTaxRate: 0.9
+                    }
+                ])
+            })
+
+            it('is correct', function() {
+                assert.equal(subject.netAmount, 346.92)
+                assert.equal(subject.tax, 166.99)
+                assert.equal(subject.grossAmount, 513.91)
+
+                expect(subject.taxLines).to.deep.equal([
+                    {
+                        name: null,
+                        rate: 0.25,
+                        amount: 55.87 //An extra 0.01 was added here, since the rounding of the total tax did not match the rounding of each tax line
+                    },
+                    {
+                        name: null,
+                        rate: 0.9,
+                        amount: 111.12
+                    }
+                ])
+
+                assertIntegrity(subject)
             })
         })
     })
@@ -522,3 +648,10 @@ describe('invoice-total', function() {
         })
     })
 })
+
+function assertIntegrity(subject) {
+    var totalTax = subject.taxLines.reduce(function(totalTax, taxLine) {
+        return totalTax.plus(taxLine.amount)
+    }, new BigNumber('0')).toNumber()
+    assert.equal(subject.tax, totalTax)
+}
