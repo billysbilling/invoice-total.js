@@ -1,5 +1,5 @@
 {
-  "name": "invoice-total",
+  "name": "@billy/invoice-total",
   "version": "0.1.0",
   "description": "Calculates the total of a Billy's Billing invoice",
   "main": "index.js",

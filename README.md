@@ -7,10 +7,10 @@
 
 ## Installation
 
-Available on https://billysbilling.registry.nodejitsu.com/ for Node.js:
+Available on the Billy npme registry:
 
 ```sh
-npm install invoice-total
+npm install @billy/invoice-total
 ```
 
 
