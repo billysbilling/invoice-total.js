@@ -7,10 +7,10 @@
 
 ## Installation
 
-Available on the Billy npme registry:
+Available on NPM:
 
 ```sh
-npm install @billy/invoice-total
+npm install @billyfree/invoice-total
 ```
 
 
