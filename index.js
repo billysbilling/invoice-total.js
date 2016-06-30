@@ -10,6 +10,8 @@ var invoiceTotal = module.exports = function(invoice, lines) {
     var tax = zero
     var linesOut = []
     var taxLinesByRate = {}
+    var taxableAmount = zero
+    var nonTaxableAmount = zero
 
     if (lines) {
         lines.forEach(function(line) {
@@ -19,6 +21,9 @@ var invoiceTotal = module.exports = function(invoice, lines) {
             amount = amount.plus(r.amountAfterDiscount)
 
             if (line.currentTaxRate) {
+                //Add the line amount to the taxableAmount sum
+                taxableAmount = taxableAmount.plus(r.amountAfterDiscount)
+
                 //Add the line's tax to the total tax, still no rounding
                 tax = tax.plus(r.tax)
 
@@ -33,6 +38,9 @@ var invoiceTotal = module.exports = function(invoice, lines) {
                 } else {
                     taxLinesByRate[taxGroup].amount = taxLinesByRate[taxGroup].amount.plus(r.tax)
                 }
+            } else {
+                //Add the line's amount to the nonTaxableAmount sum
+                nonTaxableAmount = nonTaxableAmount.plus(r.amountAfterDiscount)
             }
 
             linesOut.push({
@@ -88,7 +96,9 @@ var invoiceTotal = module.exports = function(invoice, lines) {
         tax: tax.toNumber(),
         grossAmount: grossAmount.toNumber(),
         lines: linesOut,
-        taxLines: taxLines
+        taxLines: taxLines,
+        taxableAmount: taxableAmount.toNumber(),
+        nonTaxableAmount: nonTaxableAmount.toNumber()
     }
 }
 
