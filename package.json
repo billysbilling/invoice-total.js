@@ -1,6 +1,6 @@
 {
   "name": "@billyfree/invoice-total",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Calculates the total of a Billy's Billing invoice",
   "main": "index.js",
   "directories": {
