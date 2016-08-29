@@ -318,6 +318,14 @@ describe('invoice-total', function() {
                     }
                 ])
             })
+
+            it('calculates taxable amount', function() {
+                assert.equal(subject.taxableAmount, 610)
+            })
+
+            it('calculates nontaxable amount', function() {
+                assert.equal(subject.nonTaxableAmount, 0)
+            })
         })
 
         describe('with undefined values', function() {
@@ -544,6 +552,14 @@ describe('invoice-total', function() {
                 assert.equal(subject.tax, 100)
             })
 
+            it('calculates taxable amount', function() {
+                assert.equal(subject.taxableAmount, 400)
+            })
+
+            it('calculates nontaxable amount', function() {
+                assert.equal(subject.nonTaxableAmount, 0)
+            })
+
             it('adds tax to gross', function() {
                 assert.equal(subject.grossAmount, 500)
             })
@@ -600,6 +616,14 @@ describe('invoice-total', function() {
 
             it('calculates tax', function() {
                 assert.equal(subject.tax, 454.42)
+            })
+
+            it('calculates taxable amount', function() {
+                assert.equal(subject.taxableAmount, 13266.27)
+            })
+
+            it('calculates nontaxable amount', function() {
+                assert.equal(subject.nonTaxableAmount, 12)
             })
 
             it('adds tax to gross', function() {

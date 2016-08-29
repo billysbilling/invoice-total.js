@@ -59,6 +59,7 @@ var invoiceTotal = module.exports = function(invoice, lines) {
     if (invoice.taxMode === 'incl') {
         netAmount = amount.minus(tax)
         grossAmount = amount
+        taxableAmount = taxableAmount.minus(tax)
     } else {
         netAmount = amount
         grossAmount = amount.plus(tax)
