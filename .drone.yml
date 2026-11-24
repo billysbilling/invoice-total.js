@@ -1,6 +1,6 @@
 pipeline:
   build:
-    image: node:5.3.0
+    image: node:24
     commands:
-      - npm install
+      - npm ci
       - npm test
