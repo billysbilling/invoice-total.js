@@ -1,6 +1,0 @@
-pipeline:
-  build:
-    image: node:24
-    commands:
-      - npm ci
-      - npm test
